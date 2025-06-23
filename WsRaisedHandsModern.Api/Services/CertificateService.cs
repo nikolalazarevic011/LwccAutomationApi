@@ -30,7 +30,7 @@ namespace WsRaisedHandsModern.Api.Services
             _certificateSettings = certificateSettings.Value;
             _emailService = emailService;
             _logger = logger;
-            
+
             // Configure QuestPDF license (Community License for non-commercial use)
             QuestPDF.Settings.License = LicenseType.Community;
         }
@@ -47,7 +47,7 @@ namespace WsRaisedHandsModern.Api.Services
                 }
 
                 var pdfBytes = await Task.Run(() => CreateCertificatePdf(certificateData));
-                
+
                 _logger.LogInformation("Successfully generated certificate PDF for {FullName}", certificateData.FullName);
                 return pdfBytes;
             }
@@ -64,7 +64,7 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 var pdfBytes = await GenerateCertificateAsync(certificateData);
                 await File.WriteAllBytesAsync(outputPath, pdfBytes);
-                
+
                 _logger.LogInformation("Certificate saved to {OutputPath}", outputPath);
                 return true;
             }
@@ -86,10 +86,10 @@ namespace WsRaisedHandsModern.Api.Services
             _logger.LogInformation("Starting batch processing of {TotalRecords} certificates", result.TotalRecords);
 
             var certificateList = certificates.ToList();
-            
+
             // Process in batches to avoid overwhelming the system
             var batchSize = Math.Min(_certificateSettings.MaxBatchSize, certificateList.Count);
-            
+
             for (int i = 0; i < certificateList.Count; i += batchSize)
             {
                 var batch = certificateList.Skip(i).Take(batchSize);
@@ -97,7 +97,7 @@ namespace WsRaisedHandsModern.Api.Services
             }
 
             result.ProcessingEndTime = DateTime.Now;
-            
+
             _logger.LogInformation("Batch processing completed. Success: {SuccessCount}, Failed: {FailCount}, Total Time: {TotalTime}",
                 result.SuccessfullyProcessed, result.Failed, result.TotalProcessingTime);
 
@@ -108,19 +108,19 @@ namespace WsRaisedHandsModern.Api.Services
         {
             try
             {
-                _logger.LogInformation("Generating and emailing certificate for {FullName} ({Email})", 
+                _logger.LogInformation("Generating and emailing certificate for {FullName} ({Email})",
                     certificateData.FullName, certificateData.Email);
 
                 // Generate certificate PDF
                 var pdfBytes = await GenerateCertificateAsync(certificateData);
 
                 // Create temporary file for attachment
-                var tempPath = Path.Combine(_certificateSettings.TempStoragePath, 
+                var tempPath = Path.Combine(_certificateSettings.TempStoragePath,
                     $"Certificate_{certificateData.FirstName}_{certificateData.LastName}_{Guid.NewGuid()}.pdf");
-                
+
                 // Ensure temp directory exists
                 Directory.CreateDirectory(_certificateSettings.TempStoragePath);
-                
+
                 await File.WriteAllBytesAsync(tempPath, pdfBytes);
 
                 try
@@ -200,7 +200,7 @@ namespace WsRaisedHandsModern.Api.Services
 
             // Only log errors, not warnings about missing template
             var errors = issues.Where(i => !i.Contains("Template image file not found")).ToList();
-            
+
             if (errors.Any())
             {
                 foreach (var error in errors)
@@ -239,29 +239,74 @@ namespace WsRaisedHandsModern.Api.Services
                                 .FitArea();
 
                             // Text overlay layer
-                            layers.Layer().PaddingRight(350).Column(column =>
+                            layers.Layer().Column(column =>
                             {
-                                // Participant Name
-                                column.Item().PaddingTop(_certificateSettings.NameYPosition)
+                                // Certificate of Completion header
+                                column.Item().PaddingTop(80)
+                                    .AlignCenter()
+                                    .Text("Certificate of Completion")
+                                    .FontFamily(_certificateSettings.FontFamily)
+                                    .FontSize(28)
+                                    .FontColor(_certificateSettings.FontColor)
+                                    .Bold();
+
+                                // "This Certifies That" subheader
+                                column.Item().PaddingTop(15)
+                                    .AlignCenter()
+                                    .Text("This Certifies That")
+                                    .FontFamily(_certificateSettings.FontFamily)
+                                    .FontSize(16)
+                                    .FontColor(_certificateSettings.FontColor);
+
+                                // Participant Name - with individual padding
+                                column.Item().PaddingTop(20)
                                     .PaddingLeft(_certificateSettings.NameXPosition)
+                                    .PaddingRight(350) // Apply right padding only to name
                                     .AlignCenter()
                                     .Text(certificateData.FullName)
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(_certificateSettings.NameFontSize)
+                                    .FontColor("#CC0000") // Red color for name
+                                    .Bold();
+
+                                // "has satisfactorily completed" text
+                                column.Item().PaddingTop(20)
+                                    .AlignCenter()
+                                    .Text("has satisfactorily completed")
+                                    .FontFamily(_certificateSettings.FontFamily)
+                                    .FontSize(16)
+                                    .FontColor(_certificateSettings.FontColor);
+
+                                // FOUNDATIONS TRAINING - main course title
+                                column.Item().PaddingTop(10)
+                                    .AlignCenter()
+                                    .Text("FOUNDATIONS TRAINING")
+                                    .FontFamily(_certificateSettings.FontFamily)
+                                    .FontSize(22)
                                     .FontColor(_certificateSettings.FontColor)
                                     .Bold();
 
-                                // Certificate text
+                                // "and hereby awarded this certificate by"
                                 column.Item().PaddingTop(20)
                                     .AlignCenter()
-                                    .Text(_certificateSettings.CertificateText)
+                                    .Text("and hereby awarded this certificate by")
                                     .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(18)
+                                    .FontSize(16)
                                     .FontColor(_certificateSettings.FontColor);
 
-                                // Completion date
-                                column.Item().PaddingTop(_certificateSettings.DateYPosition - _certificateSettings.NameYPosition - 100)
+                                // Organization name
+                                column.Item().PaddingTop(10)
+                                    .AlignCenter()
+                                    .Text("Living Word Christian Center")
+                                    .FontFamily(_certificateSettings.FontFamily)
+                                    .FontSize(18)
+                                    .FontColor(_certificateSettings.FontColor)
+                                    .Bold();
+
+                                // Completion date - with individual padding
+                                column.Item().PaddingTop(20)
                                     .PaddingLeft(_certificateSettings.DateXPosition - _certificateSettings.NameXPosition)
+                                    .PaddingRight(350) // Apply right padding only to date
                                     .AlignCenter()
                                     .Text(certificateData.FormattedCompletionDate)
                                     .FontFamily(_certificateSettings.FontFamily)
