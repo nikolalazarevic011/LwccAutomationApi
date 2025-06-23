@@ -242,8 +242,9 @@ namespace WsRaisedHandsModern.Api.Services
                             layers.Layer().Column(column =>
                             {
                                 // Certificate of Completion header
-                                column.Item().PaddingTop(80)
+                                column.Item().PaddingTop(90)
                                     .AlignCenter()
+                                    .PaddingRight(60) // Apply right padding only to date
                                     .Text("Certificate of Completion")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(28)
@@ -253,6 +254,7 @@ namespace WsRaisedHandsModern.Api.Services
                                 // "This Certifies That" subheader
                                 column.Item().PaddingTop(15)
                                     .AlignCenter()
+                                    .PaddingRight(60) // Apply right padding only to date
                                     .Text("This Certifies That")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(16)
@@ -261,8 +263,8 @@ namespace WsRaisedHandsModern.Api.Services
                                 // Participant Name - with individual padding
                                 column.Item().PaddingTop(20)
                                     .PaddingLeft(_certificateSettings.NameXPosition)
-                                    .PaddingRight(350) // Apply right padding only to name
-                                    .AlignCenter()
+                                    .PaddingRight(380) // Apply right padding only to name
+                                    .AlignCenter()                       
                                     .Text(certificateData.FullName)
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(_certificateSettings.NameFontSize)
@@ -272,15 +274,19 @@ namespace WsRaisedHandsModern.Api.Services
                                 // "has satisfactorily completed" text
                                 column.Item().PaddingTop(20)
                                     .AlignCenter()
+                                    .PaddingRight(60) // Apply right padding only to date
                                     .Text("has satisfactorily completed")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(16)
+
                                     .FontColor(_certificateSettings.FontColor);
 
                                 // FOUNDATIONS TRAINING - main course title
                                 column.Item().PaddingTop(10)
                                     .AlignCenter()
+                                    .PaddingRight(60) // Apply right padding only to date
                                     .Text("FOUNDATIONS TRAINING")
+
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(22)
                                     .FontColor(_certificateSettings.FontColor)
@@ -289,6 +295,7 @@ namespace WsRaisedHandsModern.Api.Services
                                 // "and hereby awarded this certificate by"
                                 column.Item().PaddingTop(20)
                                     .AlignCenter()
+                                    .PaddingRight(60) // Apply right padding only to date
                                     .Text("and hereby awarded this certificate by")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(16)
@@ -297,6 +304,7 @@ namespace WsRaisedHandsModern.Api.Services
                                 // Organization name
                                 column.Item().PaddingTop(10)
                                     .AlignCenter()
+                                    .PaddingRight(60) // Apply right padding only to date
                                     .Text("Living Word Christian Center")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(18)
@@ -306,7 +314,7 @@ namespace WsRaisedHandsModern.Api.Services
                                 // Completion date - with individual padding
                                 column.Item().PaddingTop(20)
                                     .PaddingLeft(_certificateSettings.DateXPosition - _certificateSettings.NameXPosition)
-                                    .PaddingRight(350) // Apply right padding only to date
+                                    .PaddingRight(320) // Apply right padding only to date
                                     .AlignCenter()
                                     .Text(certificateData.FormattedCompletionDate)
                                     .FontFamily(_certificateSettings.FontFamily)
@@ -382,7 +390,6 @@ namespace WsRaisedHandsModern.Api.Services
                 });
             }).GeneratePdf();
         }
-
         private async Task ProcessBatchAsync(IEnumerable<FoundationsCertificateDTO> batch, CertificateProcessingResult result)
         {
             var tasks = batch.Select(async certificate =>
