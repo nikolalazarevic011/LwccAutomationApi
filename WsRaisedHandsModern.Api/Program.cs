@@ -44,6 +44,11 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 // Add Excel service
 builder.Services.AddTransient<IExcelService, ExcelService>();
 
+// Add Certificate Services and settings
+builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
+builder.Services.AddTransient<ICertificateService, CertificateService>();
+builder.Services.AddTransient<ICsvProcessingService, CsvProcessingService>();
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
