@@ -171,11 +171,11 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 issues.Add("Template image path is not configured");
             }
-            else 
+            else
             {
                 // Resolve relative path to absolute path
-                var templatePath = Path.IsPathRooted(_certificateSettings.TemplateImagePath) 
-                    ? _certificateSettings.TemplateImagePath 
+                var templatePath = Path.IsPathRooted(_certificateSettings.TemplateImagePath)
+                    ? _certificateSettings.TemplateImagePath
                     : Path.Combine(Directory.GetCurrentDirectory(), _certificateSettings.TemplateImagePath);
 
                 _logger.LogInformation("Looking for template at: {TemplatePath}", templatePath);
@@ -239,22 +239,26 @@ namespace WsRaisedHandsModern.Api.Services
         private byte[] CreateCertificatePdf(FoundationsCertificateDTO certificateData)
         {
             using var memoryStream = new MemoryStream();
-            
-            // Create document in landscape orientation like the Intercessory project
+
+            // Create document in landscape orientation
             var document = new Document(PageSize.A4.Rotate());
             var writer = PdfWriter.GetInstance(document, memoryStream);
-            
+
             document.Open();
 
-            // Create fonts exactly like Intercessory project
+            // Create fonts
             BaseFont bf = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
 
+            // Regular fonts
             iTextSharp.text.Font titleFont = new iTextSharp.text.Font(bf, 25, iTextSharp.text.Font.BOLD);
             iTextSharp.text.Font textFont = new iTextSharp.text.Font(bf, 18, iTextSharp.text.Font.NORMAL);
-            iTextSharp.text.Font nameFont = new iTextSharp.text.Font(bf, 24, iTextSharp.text.Font.BOLD); // Just make it bold for now
             iTextSharp.text.Font courseFont = new iTextSharp.text.Font(bf, 21, iTextSharp.text.Font.BOLD);
             iTextSharp.text.Font dateFont = new iTextSharp.text.Font(bf, 16, iTextSharp.text.Font.BOLD);
 
+            // Create RED font for the name
+            // Create custom red color (204, 0, 0) which is #CC0000
+            BaseColor customRed = new BaseColor(204, 0, 0);
+            iTextSharp.text.Font nameFont = new iTextSharp.text.Font(bf, 24, iTextSharp.text.Font.BOLD, customRed);
             // Check if template image exists and add it as background
             var templatePath = Path.IsPathRooted(_certificateSettings.TemplateImagePath)
                 ? _certificateSettings.TemplateImagePath
@@ -299,7 +303,7 @@ namespace WsRaisedHandsModern.Api.Services
         }
 
         private void AddCertificateContent(PdfPTable mainTable, FoundationsCertificateDTO certificateData,
-            iTextSharp.text.Font titleFont, iTextSharp.text.Font textFont, iTextSharp.text.Font nameFont, 
+            iTextSharp.text.Font titleFont, iTextSharp.text.Font textFont, iTextSharp.text.Font nameFont,
             iTextSharp.text.Font courseFont, iTextSharp.text.Font dateFont)
         {
             // Certificate of Completion title
@@ -308,7 +312,7 @@ namespace WsRaisedHandsModern.Api.Services
                 Alignment = Element.ALIGN_CENTER
             };
             titleParagraph.SetLeading(0, 0.8f);
-            
+
             var titleCell = CreateBorderlessCell();
             titleCell.AddElement(titleParagraph);
             titleCell.PaddingTop = 60f; // Adjust vertical positioning
@@ -320,19 +324,19 @@ namespace WsRaisedHandsModern.Api.Services
                 Alignment = Element.ALIGN_CENTER
             };
             certifiesParagraph.SetLeading(0, 1f);
-            
+
             var certifiesCell = CreateBorderlessCell();
             certifiesCell.AddElement(certifiesParagraph);
             certifiesCell.PaddingTop = 20f;
             mainTable.AddCell(certifiesCell);
 
-            // Student Name 
+            // Student Name - NOW IN RED COLOR
             var nameParagraph = new Paragraph(certificateData.FullName, nameFont)
             {
                 Alignment = Element.ALIGN_CENTER
             };
             nameParagraph.SetLeading(0, 1f);
-            
+
             var nameCell = CreateBorderlessCell();
             nameCell.AddElement(nameParagraph);
             nameCell.PaddingTop = 10f;
@@ -344,7 +348,7 @@ namespace WsRaisedHandsModern.Api.Services
                 Alignment = Element.ALIGN_CENTER
             };
             completedParagraph.SetLeading(0, 1f);
-            
+
             var completedCell = CreateBorderlessCell();
             completedCell.AddElement(completedParagraph);
             completedCell.PaddingTop = 15f;
@@ -356,7 +360,7 @@ namespace WsRaisedHandsModern.Api.Services
                 Alignment = Element.ALIGN_CENTER
             };
             courseParagraph.SetLeading(0, 1f);
-            
+
             var courseCell = CreateBorderlessCell();
             courseCell.AddElement(courseParagraph);
             courseCell.PaddingTop = 25f;
@@ -368,10 +372,10 @@ namespace WsRaisedHandsModern.Api.Services
                 Alignment = Element.ALIGN_CENTER
             };
             awardedParagraph.SetLeading(0, 1f);
-            
+
             var awardedCell = CreateBorderlessCell();
             awardedCell.AddElement(awardedParagraph);
-            awardedCell.PaddingTop = 25f;
+            awardedCell.PaddingTop = 10f;
             mainTable.AddCell(awardedCell);
 
             // Organization name
@@ -379,11 +383,11 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 Alignment = Element.ALIGN_CENTER
             };
-            orgParagraph.SetLeading(0, 1.5f);
-            
+            orgParagraph.SetLeading(0, 1f);
+
             var orgCell = CreateBorderlessCell();
             orgCell.AddElement(orgParagraph);
-            orgCell.PaddingTop = 15f;
+            orgCell.PaddingTop = 10f;
             mainTable.AddCell(orgCell);
 
             // Completion date
@@ -392,10 +396,10 @@ namespace WsRaisedHandsModern.Api.Services
                 Alignment = Element.ALIGN_CENTER
             };
             dateParagraph.SetLeading(0, 1.5f);
-            
+
             var dateCell = CreateBorderlessCell();
             dateCell.AddElement(dateParagraph);
-            dateCell.PaddingTop = 25f;
+            dateCell.PaddingTop = 10f;
             mainTable.AddCell(dateCell);
         }
 
