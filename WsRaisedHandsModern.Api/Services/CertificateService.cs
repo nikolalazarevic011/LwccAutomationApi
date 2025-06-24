@@ -6,10 +6,8 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using SixLabors.ImageSharp;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 using WsRaisedHandsModern.Api.DTOs;
 using WsRaisedHandsModern.Api.Helpers;
 using WsRaisedHandsModern.Api.Interfaces;
@@ -30,9 +28,6 @@ namespace WsRaisedHandsModern.Api.Services
             _certificateSettings = certificateSettings.Value;
             _emailService = emailService;
             _logger = logger;
-
-            // Configure QuestPDF license (Community License for non-commercial use)
-            QuestPDF.Settings.License = LicenseType.Community;
         }
 
         public async Task<byte[]> GenerateCertificateAsync(FoundationsCertificateDTO certificateData)
@@ -115,11 +110,15 @@ namespace WsRaisedHandsModern.Api.Services
                 var pdfBytes = await GenerateCertificateAsync(certificateData);
 
                 // Create temporary file for attachment
-                var tempPath = Path.Combine(_certificateSettings.TempStoragePath,
+                var tempStoragePath = Path.IsPathRooted(_certificateSettings.TempStoragePath)
+                    ? _certificateSettings.TempStoragePath
+                    : Path.Combine(Directory.GetCurrentDirectory(), _certificateSettings.TempStoragePath);
+
+                var tempPath = Path.Combine(tempStoragePath,
                     $"Certificate_{certificateData.FirstName}_{certificateData.LastName}_{Guid.NewGuid()}.pdf");
 
                 // Ensure temp directory exists
-                Directory.CreateDirectory(_certificateSettings.TempStoragePath);
+                Directory.CreateDirectory(tempStoragePath);
 
                 await File.WriteAllBytesAsync(tempPath, pdfBytes);
 
@@ -172,19 +171,37 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 issues.Add("Template image path is not configured");
             }
-            else if (!File.Exists(_certificateSettings.TemplateImagePath))
+            else 
             {
-                issues.Add($"Template image file not found: {_certificateSettings.TemplateImagePath}");
-                _logger.LogWarning("Template image not found, will generate text-based certificate instead");
+                // Resolve relative path to absolute path
+                var templatePath = Path.IsPathRooted(_certificateSettings.TemplateImagePath) 
+                    ? _certificateSettings.TemplateImagePath 
+                    : Path.Combine(Directory.GetCurrentDirectory(), _certificateSettings.TemplateImagePath);
+
+                _logger.LogInformation("Looking for template at: {TemplatePath}", templatePath);
+
+                if (!File.Exists(templatePath))
+                {
+                    issues.Add($"Template image file not found: {templatePath}");
+                    _logger.LogWarning("Template image not found at {TemplatePath}, will generate text-based certificate instead", templatePath);
+                }
             }
 
             if (string.IsNullOrEmpty(_certificateSettings.TempStoragePath))
+            {
                 issues.Add("Temporary storage path is not configured");
+            }
             else
             {
                 try
                 {
-                    Directory.CreateDirectory(_certificateSettings.TempStoragePath);
+                    // Resolve relative path to absolute path
+                    var tempPath = Path.IsPathRooted(_certificateSettings.TempStoragePath)
+                        ? _certificateSettings.TempStoragePath
+                        : Path.Combine(Directory.GetCurrentDirectory(), _certificateSettings.TempStoragePath);
+
+                    _logger.LogInformation("Creating temp directory at: {TempPath}", tempPath);
+                    Directory.CreateDirectory(tempPath);
                 }
                 catch (Exception ex)
                 {
@@ -221,153 +238,178 @@ namespace WsRaisedHandsModern.Api.Services
 
         private byte[] CreateCertificatePdf(FoundationsCertificateDTO certificateData)
         {
-            return Document.Create(container =>
+            using var memoryStream = new MemoryStream();
+            
+            // Create document in landscape orientation like the Intercessory project
+            var document = new Document(PageSize.A4.Rotate());
+            var writer = PdfWriter.GetInstance(document, memoryStream);
+            
+            document.Open();
+
+            // Create fonts exactly like Intercessory project
+            BaseFont bf = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+
+            iTextSharp.text.Font titleFont = new iTextSharp.text.Font(bf, 25, iTextSharp.text.Font.BOLD);
+            iTextSharp.text.Font textFont = new iTextSharp.text.Font(bf, 18, iTextSharp.text.Font.NORMAL);
+            iTextSharp.text.Font nameFont = new iTextSharp.text.Font(bf, 24, iTextSharp.text.Font.BOLD); // Just make it bold for now
+            iTextSharp.text.Font courseFont = new iTextSharp.text.Font(bf, 21, iTextSharp.text.Font.BOLD);
+            iTextSharp.text.Font dateFont = new iTextSharp.text.Font(bf, 16, iTextSharp.text.Font.NORMAL);
+
+            // Check if template image exists and add it as background
+            var templatePath = Path.IsPathRooted(_certificateSettings.TemplateImagePath)
+                ? _certificateSettings.TemplateImagePath
+                : Path.Combine(Directory.GetCurrentDirectory(), _certificateSettings.TemplateImagePath);
+
+            _logger.LogInformation("Attempting to load template from: {TemplatePath}", templatePath);
+
+            if (!string.IsNullOrEmpty(_certificateSettings.TemplateImagePath) && File.Exists(templatePath))
             {
-                container.Page(page =>
+                try
                 {
-                    // page.Size(PageSizes.A4.Landscape());
-                    page.Size(800, 600); // Custom size for certificate
-                    page.Margin(0);
+                    var backgroundImage = Image.GetInstance(templatePath);
+                    backgroundImage.ScaleAbsolute(PageSize.A4.Height, PageSize.A4.Width);
+                    backgroundImage.SetAbsolutePosition(0, 0);
+                    document.Add(backgroundImage);
+                    _logger.LogInformation("Successfully loaded template image");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not load template image, generating text-only certificate");
+                }
+            }
+            else
+            {
+                _logger.LogInformation("No template image found at {TemplatePath}, generating text-only certificate", templatePath);
+            }
 
-                    if (File.Exists(_certificateSettings.TemplateImagePath))
-                    {
-                        page.Content().Layers(layers =>
-                        {
-                            // Background image
-                            layers.PrimaryLayer().Image(_certificateSettings.TemplateImagePath)
-                                .FitArea();
+            // Create main content table with single column for centering
+            var mainTable = new PdfPTable(1)
+            {
+                WidthPercentage = 100,
+                HorizontalAlignment = Element.ALIGN_CENTER
+            };
 
-                            // Text overlay with horizontal padding to center on 800px template
-                            layers.Layer().AlignCenter().MaxWidth(600).Column(column =>
-                            {
-                                column.Item().PaddingTop(90)
-                                    // .AlignCenter()
-                                    // .PaddingLeft(-100)
-                                    // .PaddingRight(-270)
-                                    .Text("Certificate of Completion")
+            // Add content sections
+            AddCertificateContent(mainTable, certificateData, titleFont, textFont, nameFont, courseFont, dateFont);
 
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(28)
-                                    .FontColor(_certificateSettings.FontColor)
-                                    .Bold();
+            document.Add(mainTable);
+            document.Close();
 
-                                column.Item().PaddingTop(15)
-                                    .AlignCenter()
-                                    .Text("This Certifies That")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(16)
-                                    .FontColor(_certificateSettings.FontColor);
-
-                                column.Item().PaddingTop(20)
-                                    // .AlignCenter()
-                                    .AlignLeft()
-                                    .Text(certificateData.FullName)
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(_certificateSettings.NameFontSize)
-                                    .FontColor("#CC0000")
-                                    .Bold();
-
-                                column.Item().PaddingTop(20)
-                                    // .AlignCenter()
-                                    .Text("has satisfactorily completed")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(16)
-                                    .FontColor(_certificateSettings.FontColor);
-
-                                column.Item().PaddingTop(10)
-                                    // .AlignCenter()
-                                    .Text("FOUNDATIONS TRAINING")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(22)
-                                    .FontColor(_certificateSettings.FontColor)
-                                    .Bold();
-
-                                column.Item().PaddingTop(20)
-                                    // .AlignCenter()
-                                    .Text("and hereby awarded this certificate by")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(16)
-                                    .FontColor(_certificateSettings.FontColor);
-
-                                column.Item().PaddingTop(10)
-                                    // .AlignCenter()
-                                    .Text("Living Word Christian Center")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(18)
-                                    .FontColor(_certificateSettings.FontColor)
-                                    .Bold();
-
-                                column.Item().PaddingTop(20)
-                                    // .AlignCenter()
-                                    .Text(certificateData.FormattedCompletionDate)
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(_certificateSettings.DateFontSize)
-                                    .FontColor(_certificateSettings.FontColor);
-                            });
-                        });
-                    }
-                    else
-                    {
-                        // Fallback text-based certificate
-                        page.Content().Padding(50).Column(column =>
-                        {
-                            column.Spacing(30);
-
-                            column.Item().AlignCenter().Text("CERTIFICATE OF COMPLETION")
-                                .FontFamily(_certificateSettings.FontFamily)
-                                .FontSize(36)
-                                .FontColor(_certificateSettings.FontColor)
-                                .Bold();
-
-                            column.Item().AlignCenter().Text("This certifies that")
-                                .FontFamily(_certificateSettings.FontFamily)
-                                .FontSize(20)
-                                .FontColor(_certificateSettings.FontColor);
-
-                            column.Item().AlignCenter().Text(certificateData.FullName)
-                                .FontFamily(_certificateSettings.FontFamily)
-                                .FontSize(_certificateSettings.NameFontSize)
-                                .FontColor(_certificateSettings.FontColor)
-                                .Bold();
-
-                            column.Item().AlignCenter().Text(_certificateSettings.CertificateText)
-                                .FontFamily(_certificateSettings.FontFamily)
-                                .FontSize(18)
-                                .FontColor(_certificateSettings.FontColor);
-
-                            column.Item().AlignCenter().Text(certificateData.FormattedCompletionDate)
-                                .FontFamily(_certificateSettings.FontFamily)
-                                .FontSize(_certificateSettings.DateFontSize)
-                                .FontColor(_certificateSettings.FontColor);
-
-                            column.Item().Height(100);
-
-                            column.Item().Row(row =>
-                            {
-                                row.RelativeItem().AlignLeft().Text("_______________________")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(14);
-
-                                row.RelativeItem().AlignRight().Text("_______________________")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(14);
-                            });
-
-                            column.Item().Row(row =>
-                            {
-                                row.RelativeItem().AlignLeft().Text("Instructor Signature")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(12);
-
-                                row.RelativeItem().AlignRight().Text("Date")
-                                    .FontFamily(_certificateSettings.FontFamily)
-                                    .FontSize(12);
-                            });
-                        });
-                    }
-                });
-            }).GeneratePdf();
+            return memoryStream.ToArray();
         }
+
+        private void AddCertificateContent(PdfPTable mainTable, FoundationsCertificateDTO certificateData,
+            iTextSharp.text.Font titleFont, iTextSharp.text.Font textFont, iTextSharp.text.Font nameFont, 
+            iTextSharp.text.Font courseFont, iTextSharp.text.Font dateFont)
+        {
+            // Certificate of Completion title
+            var titleParagraph = new Paragraph("Certificate of Completion", titleFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            titleParagraph.SetLeading(0, 0.5f);
+            
+            var titleCell = CreateBorderlessCell();
+            titleCell.AddElement(titleParagraph);
+            titleCell.PaddingTop = 60f; // Adjust vertical positioning
+            mainTable.AddCell(titleCell);
+
+            // "This Certifies That" text
+            var certifiesParagraph = new Paragraph("This Certifies That", textFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            certifiesParagraph.SetLeading(0, 1f);
+            
+            var certifiesCell = CreateBorderlessCell();
+            certifiesCell.AddElement(certifiesParagraph);
+            certifiesCell.PaddingTop = 20f;
+            mainTable.AddCell(certifiesCell);
+
+            // Student Name (highlighted in red)
+            var nameParagraph = new Paragraph(certificateData.FullName, nameFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            nameParagraph.SetLeading(0, 1f);
+            
+            var nameCell = CreateBorderlessCell();
+            nameCell.AddElement(nameParagraph);
+            nameCell.PaddingTop = 10f;
+            mainTable.AddCell(nameCell);
+
+            // "has satisfactorily completed" text
+            var completedParagraph = new Paragraph("has satisfactorily completed", textFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            completedParagraph.SetLeading(0, 1f);
+            
+            var completedCell = CreateBorderlessCell();
+            completedCell.AddElement(completedParagraph);
+            completedCell.PaddingTop = 25f;
+            mainTable.AddCell(completedCell);
+
+            // Course title
+            var courseParagraph = new Paragraph("FOUNDATIONS TRAINING", courseFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            courseParagraph.SetLeading(0, 1.5f);
+            
+            var courseCell = CreateBorderlessCell();
+            courseCell.AddElement(courseParagraph);
+            courseCell.PaddingTop = 15f;
+            mainTable.AddCell(courseCell);
+
+            // "and hereby awarded this certificate by" text
+            var awardedParagraph = new Paragraph("and hereby awarded this certificate by", textFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            awardedParagraph.SetLeading(0, 1.5f);
+            
+            var awardedCell = CreateBorderlessCell();
+            awardedCell.AddElement(awardedParagraph);
+            awardedCell.PaddingTop = 25f;
+            mainTable.AddCell(awardedCell);
+
+            // Organization name
+            var orgParagraph = new Paragraph("Living Word Christian Center", textFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            orgParagraph.SetLeading(0, 1.5f);
+            
+            var orgCell = CreateBorderlessCell();
+            orgCell.AddElement(orgParagraph);
+            orgCell.PaddingTop = 15f;
+            mainTable.AddCell(orgCell);
+
+            // Completion date
+            var dateParagraph = new Paragraph(certificateData.FormattedCompletionDate, dateFont)
+            {
+                Alignment = Element.ALIGN_CENTER
+            };
+            dateParagraph.SetLeading(0, 1.5f);
+            
+            var dateCell = CreateBorderlessCell();
+            dateCell.AddElement(dateParagraph);
+            dateCell.PaddingTop = 25f;
+            mainTable.AddCell(dateCell);
+        }
+
+        private PdfPCell CreateBorderlessCell()
+        {
+            var cell = new PdfPCell
+            {
+                Border = Rectangle.NO_BORDER,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_MIDDLE
+            };
+            return cell;
+        }
+
         private async Task ProcessBatchAsync(IEnumerable<FoundationsCertificateDTO> batch, CertificateProcessingResult result)
         {
             var tasks = batch.Select(async certificate =>
