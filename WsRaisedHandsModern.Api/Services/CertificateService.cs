@@ -253,7 +253,7 @@ namespace WsRaisedHandsModern.Api.Services
             iTextSharp.text.Font textFont = new iTextSharp.text.Font(bf, 18, iTextSharp.text.Font.NORMAL);
             iTextSharp.text.Font nameFont = new iTextSharp.text.Font(bf, 24, iTextSharp.text.Font.BOLD); // Just make it bold for now
             iTextSharp.text.Font courseFont = new iTextSharp.text.Font(bf, 21, iTextSharp.text.Font.BOLD);
-            iTextSharp.text.Font dateFont = new iTextSharp.text.Font(bf, 16, iTextSharp.text.Font.NORMAL);
+            iTextSharp.text.Font dateFont = new iTextSharp.text.Font(bf, 16, iTextSharp.text.Font.BOLD);
 
             // Check if template image exists and add it as background
             var templatePath = Path.IsPathRooted(_certificateSettings.TemplateImagePath)
@@ -307,7 +307,7 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 Alignment = Element.ALIGN_CENTER
             };
-            titleParagraph.SetLeading(0, 0.5f);
+            titleParagraph.SetLeading(0, 0.8f);
             
             var titleCell = CreateBorderlessCell();
             titleCell.AddElement(titleParagraph);
@@ -326,7 +326,7 @@ namespace WsRaisedHandsModern.Api.Services
             certifiesCell.PaddingTop = 20f;
             mainTable.AddCell(certifiesCell);
 
-            // Student Name (highlighted in red)
+            // Student Name 
             var nameParagraph = new Paragraph(certificateData.FullName, nameFont)
             {
                 Alignment = Element.ALIGN_CENTER
@@ -347,7 +347,7 @@ namespace WsRaisedHandsModern.Api.Services
             
             var completedCell = CreateBorderlessCell();
             completedCell.AddElement(completedParagraph);
-            completedCell.PaddingTop = 25f;
+            completedCell.PaddingTop = 15f;
             mainTable.AddCell(completedCell);
 
             // Course title
@@ -355,11 +355,11 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 Alignment = Element.ALIGN_CENTER
             };
-            courseParagraph.SetLeading(0, 1.5f);
+            courseParagraph.SetLeading(0, 1f);
             
             var courseCell = CreateBorderlessCell();
             courseCell.AddElement(courseParagraph);
-            courseCell.PaddingTop = 15f;
+            courseCell.PaddingTop = 25f;
             mainTable.AddCell(courseCell);
 
             // "and hereby awarded this certificate by" text
@@ -367,7 +367,7 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 Alignment = Element.ALIGN_CENTER
             };
-            awardedParagraph.SetLeading(0, 1.5f);
+            awardedParagraph.SetLeading(0, 1f);
             
             var awardedCell = CreateBorderlessCell();
             awardedCell.AddElement(awardedParagraph);
