@@ -10,9 +10,9 @@ namespace WsRaisedHandsModern.Api.Helpers
         public string FontColor { get; set; } = "#000000";
         
         // Coordinates for text placement on certificate (in pixels or points)
-        public int NameXPosition { get; set; } = 400;
+        public int NameXPosition { get; set; } = 0;
         public int NameYPosition { get; set; } = 300;
-        public int DateXPosition { get; set; } = 400;
+        public int DateXPosition { get; set; } = 0;
         public int DateYPosition { get; set; } = 400;
         
         // Certificate text

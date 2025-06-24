@@ -225,97 +225,80 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A4.Landscape());
+                    // page.Size(PageSizes.A4.Landscape());
+                    page.Size(800, 600); // Custom size for certificate
                     page.Margin(0);
 
-                    // Check if template image exists, if not create a simple text-based certificate
                     if (File.Exists(_certificateSettings.TemplateImagePath))
                     {
-                        // Use layers with background image
                         page.Content().Layers(layers =>
                         {
-                            // Primary background layer - certificate template
+                            // Background image
                             layers.PrimaryLayer().Image(_certificateSettings.TemplateImagePath)
                                 .FitArea();
 
-                            // Text overlay layer
-                            layers.Layer().Column(column =>
+                            // Text overlay with horizontal padding to center on 800px template
+                            layers.Layer().AlignCenter().MaxWidth(600).Column(column =>
                             {
-                                // Certificate of Completion header
                                 column.Item().PaddingTop(90)
-                                    .AlignCenter()
-                                    .PaddingRight(60) // Apply right padding only to date
+                                    // .AlignCenter()
+                                    // .PaddingLeft(-100)
+                                    // .PaddingRight(-270)
                                     .Text("Certificate of Completion")
+
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(28)
                                     .FontColor(_certificateSettings.FontColor)
                                     .Bold();
 
-                                // "This Certifies That" subheader
                                 column.Item().PaddingTop(15)
                                     .AlignCenter()
-                                    .PaddingRight(60) // Apply right padding only to date
                                     .Text("This Certifies That")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(16)
                                     .FontColor(_certificateSettings.FontColor);
 
-                                // Participant Name - with individual padding
                                 column.Item().PaddingTop(20)
-                                    .PaddingLeft(_certificateSettings.NameXPosition)
-                                    .PaddingRight(380) // Apply right padding only to name
-                                    .AlignCenter()                       
+                                    // .AlignCenter()
+                                    .AlignLeft()
                                     .Text(certificateData.FullName)
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(_certificateSettings.NameFontSize)
-                                    .FontColor("#CC0000") // Red color for name
+                                    .FontColor("#CC0000")
                                     .Bold();
 
-                                // "has satisfactorily completed" text
                                 column.Item().PaddingTop(20)
-                                    .AlignCenter()
-                                    .PaddingRight(60) // Apply right padding only to date
+                                    // .AlignCenter()
                                     .Text("has satisfactorily completed")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(16)
-
                                     .FontColor(_certificateSettings.FontColor);
 
-                                // FOUNDATIONS TRAINING - main course title
                                 column.Item().PaddingTop(10)
-                                    .AlignCenter()
-                                    .PaddingRight(60) // Apply right padding only to date
+                                    // .AlignCenter()
                                     .Text("FOUNDATIONS TRAINING")
-
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(22)
                                     .FontColor(_certificateSettings.FontColor)
                                     .Bold();
 
-                                // "and hereby awarded this certificate by"
                                 column.Item().PaddingTop(20)
-                                    .AlignCenter()
-                                    .PaddingRight(60) // Apply right padding only to date
+                                    // .AlignCenter()
                                     .Text("and hereby awarded this certificate by")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(16)
                                     .FontColor(_certificateSettings.FontColor);
 
-                                // Organization name
                                 column.Item().PaddingTop(10)
-                                    .AlignCenter()
-                                    .PaddingRight(60) // Apply right padding only to date
+                                    // .AlignCenter()
                                     .Text("Living Word Christian Center")
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(18)
                                     .FontColor(_certificateSettings.FontColor)
                                     .Bold();
 
-                                // Completion date - with individual padding
                                 column.Item().PaddingTop(20)
-                                    .PaddingLeft(_certificateSettings.DateXPosition - _certificateSettings.NameXPosition)
-                                    .PaddingRight(320) // Apply right padding only to date
-                                    .AlignCenter()
+                                    // .AlignCenter()
                                     .Text(certificateData.FormattedCompletionDate)
                                     .FontFamily(_certificateSettings.FontFamily)
                                     .FontSize(_certificateSettings.DateFontSize)
@@ -325,12 +308,11 @@ namespace WsRaisedHandsModern.Api.Services
                     }
                     else
                     {
-                        // Create simple text-based certificate without background image
+                        // Fallback text-based certificate
                         page.Content().Padding(50).Column(column =>
                         {
                             column.Spacing(30);
 
-                            // Header
                             column.Item().AlignCenter().Text("CERTIFICATE OF COMPLETION")
                                 .FontFamily(_certificateSettings.FontFamily)
                                 .FontSize(36)
@@ -342,26 +324,22 @@ namespace WsRaisedHandsModern.Api.Services
                                 .FontSize(20)
                                 .FontColor(_certificateSettings.FontColor);
 
-                            // Participant Name
                             column.Item().AlignCenter().Text(certificateData.FullName)
                                 .FontFamily(_certificateSettings.FontFamily)
                                 .FontSize(_certificateSettings.NameFontSize)
                                 .FontColor(_certificateSettings.FontColor)
                                 .Bold();
 
-                            // Certificate text
                             column.Item().AlignCenter().Text(_certificateSettings.CertificateText)
                                 .FontFamily(_certificateSettings.FontFamily)
                                 .FontSize(18)
                                 .FontColor(_certificateSettings.FontColor);
 
-                            // Completion date
                             column.Item().AlignCenter().Text(certificateData.FormattedCompletionDate)
                                 .FontFamily(_certificateSettings.FontFamily)
                                 .FontSize(_certificateSettings.DateFontSize)
                                 .FontColor(_certificateSettings.FontColor);
 
-                            // Footer spacing
                             column.Item().Height(100);
 
                             column.Item().Row(row =>
