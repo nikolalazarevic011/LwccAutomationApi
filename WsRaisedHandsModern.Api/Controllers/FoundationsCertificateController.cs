@@ -10,6 +10,7 @@ using WsRaisedHandsModern.Api.Helpers;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using WsRaisedHandsModern.Api.Models;
 
 namespace WsRaisedHandsModern.Api.Controllers
 {
@@ -51,21 +52,26 @@ namespace WsRaisedHandsModern.Api.Controllers
                     return BadRequest(validationResult.ErrorMessage);
                 }
 
-                _logger.LogInformation("Processing uploaded CSV file: {FileName} ({FileSize} bytes)", 
+                _logger.LogInformation("Processing uploaded CSV file: {FileName} ({FileSize} bytes)",
                     csvFile.FileName, csvFile.Length);
 
-                // Parse CSV
-                List<FoundationsCertificateDTO> certificates;
-                using (var stream = csvFile.OpenReadStream())
+                // Validate headers first with a separate stream
+                bool headersValid;
+                using (var headerStream = csvFile.OpenReadStream())
                 {
-                    // Validate headers first
-                    var headersValid = await _csvProcessingService.ValidateCsvHeadersAsync(stream);
-                    if (!headersValid)
-                    {
-                        return BadRequest("CSV file does not have the required headers. Expected: Email, FirstName, LastName, CompletionDate");
-                    }
+                    headersValid = await _csvProcessingService.ValidateCsvHeadersAsync(headerStream);
+                }
 
-                    certificates = await _csvProcessingService.ParseFoundationsCsvAsync(stream);
+                if (!headersValid)
+                {
+                    return BadRequest("CSV file does not have the required headers. Expected: Email, FirstName, LastName, CompletionDate");
+                }
+
+                // Parse CSV with a new stream
+                List<FoundationsCertificateDTO> certificates;
+                using (var parseStream = csvFile.OpenReadStream())
+                {
+                    certificates = await _csvProcessingService.ParseFoundationsCsvAsync(parseStream);
                 }
 
                 if (!certificates.Any())
@@ -122,7 +128,7 @@ namespace WsRaisedHandsModern.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("Generating and emailing certificate for {FullName} ({Email})", 
+                _logger.LogInformation("Generating and emailing certificate for {FullName} ({Email})",
                     certificateData.FullName, certificateData.Email);
 
                 var success = await _certificateService.GenerateAndEmailCertificateAsync(certificateData);
@@ -159,18 +165,25 @@ namespace WsRaisedHandsModern.Api.Controllers
                     return BadRequest(validationResult.ErrorMessage);
                 }
 
-                using var stream = csvFile.OpenReadStream();
-                
-                // Validate headers
-                var headersValid = await _csvProcessingService.ValidateCsvHeadersAsync(stream);
+                // Validate headers first with a separate stream
+                bool headersValid;
+                using (var headerStream = csvFile.OpenReadStream())
+                {
+                    headersValid = await _csvProcessingService.ValidateCsvHeadersAsync(headerStream);
+                }
+
                 if (!headersValid)
                 {
                     return BadRequest("CSV file does not have the required headers. Expected: Email, FirstName, LastName, CompletionDate");
                 }
 
-                // Get preview data
-                var preview = await _csvProcessingService.GetCsvPreviewAsync(stream);
-                
+                // Get preview data with a new stream
+                List<FoundationsCsvImportModel> preview;
+                using (var previewStream = csvFile.OpenReadStream())
+                {
+                    preview = await _csvProcessingService.GetCsvPreviewAsync(previewStream);
+                }
+
                 return Ok(new
                 {
                     message = "CSV preview (first 5 rows)",
@@ -195,13 +208,13 @@ namespace WsRaisedHandsModern.Api.Controllers
             try
             {
                 var isValid = _certificateService.ValidateCertificateConfiguration();
-                
+
                 var configInfo = new
                 {
                     isValid = isValid,
                     templateImagePath = _certificateSettings.TemplateImagePath,
                     tempStoragePath = _certificateSettings.TempStoragePath,
-                    templateExists = !string.IsNullOrEmpty(_certificateSettings.TemplateImagePath) && 
+                    templateExists = !string.IsNullOrEmpty(_certificateSettings.TemplateImagePath) &&
                                    System.IO.File.Exists(_certificateSettings.TemplateImagePath),
                     tempStorageExists = !string.IsNullOrEmpty(_certificateSettings.TempStoragePath) &&
                                       Directory.Exists(_certificateSettings.TempStoragePath),

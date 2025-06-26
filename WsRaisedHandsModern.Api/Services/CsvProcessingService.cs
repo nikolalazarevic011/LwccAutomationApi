@@ -27,8 +27,6 @@ namespace WsRaisedHandsModern.Api.Services
         {
             try
             {
-                csvStream.Position = 0; // Reset stream position
-                
                 using var reader = new StreamReader(csvStream);
                 using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
@@ -38,7 +36,7 @@ namespace WsRaisedHandsModern.Api.Services
 
                 // Read raw CSV data first
                 var rawRecords = await Task.Run(() => csv.GetRecords<FoundationsCsvImportModel>().ToList());
-                
+
                 // Convert and validate
                 var (validCertificates, errors) = ConvertAndValidateCsvData(rawRecords);
 
@@ -99,7 +97,7 @@ namespace WsRaisedHandsModern.Api.Services
             return result;
         }
 
-        public (List<FoundationsCertificateDTO> ValidCertificates, List<CertificateProcessingError> Errors) 
+        public (List<FoundationsCertificateDTO> ValidCertificates, List<CertificateProcessingError> Errors)
             ConvertAndValidateCsvData(IEnumerable<FoundationsCsvImportModel> csvData)
         {
             var validCertificates = new List<FoundationsCertificateDTO>();
@@ -136,16 +134,14 @@ namespace WsRaisedHandsModern.Api.Services
         {
             try
             {
-                csvStream.Position = 0; // Reset stream position
-                
                 using var reader = new StreamReader(csvStream);
                 var headerLine = await reader.ReadLineAsync();
-                
+
                 if (string.IsNullOrEmpty(headerLine))
                     return false;
 
                 var headers = headerLine.Split(',').Select(h => h.Trim().Trim('"')).ToArray();
-                
+
                 // Check if all expected headers are present (case-insensitive)
                 foreach (var expectedHeader in _expectedHeaders)
                 {
@@ -163,18 +159,12 @@ namespace WsRaisedHandsModern.Api.Services
                 _logger.LogError(ex, "Error validating CSV headers");
                 return false;
             }
-            finally
-            {
-                csvStream.Position = 0; // Reset for subsequent operations
-            }
         }
 
         public async Task<List<FoundationsCsvImportModel>> GetCsvPreviewAsync(Stream csvStream)
         {
             try
             {
-                csvStream.Position = 0; // Reset stream position
-                
                 using var reader = new StreamReader(csvStream);
                 using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
@@ -190,7 +180,7 @@ namespace WsRaisedHandsModern.Api.Services
                 {
                     records.Add(record);
                     recordsRead++;
-                    
+
                     if (recordsRead >= maxPreviewRecords)
                         break;
                 }
@@ -201,10 +191,6 @@ namespace WsRaisedHandsModern.Api.Services
             {
                 _logger.LogError(ex, "Error getting CSV preview");
                 throw;
-            }
-            finally
-            {
-                csvStream.Position = 0; // Reset for subsequent operations
             }
         }
 
