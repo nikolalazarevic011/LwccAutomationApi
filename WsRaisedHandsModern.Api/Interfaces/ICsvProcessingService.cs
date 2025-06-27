@@ -24,13 +24,6 @@ namespace WsRaisedHandsModern.Api.Interfaces
         Task<List<FoundationsCertificateDTO>> ParseFoundationsCsvAsync(string filePath);
 
         /// <summary>
-        /// Validates CSV data structure and content
-        /// </summary>
-        /// <param name="csvData">Raw CSV import models</param>
-        /// <returns>Validation result with errors if any</returns>
-        CsvValidationResult ValidateCsvData(IEnumerable<FoundationsCsvImportModel> csvData);
-
-        /// <summary>
         /// Converts raw CSV import models to validated certificate DTOs
         /// </summary>
         /// <param name="csvData">Raw CSV import data</param>
@@ -53,13 +46,5 @@ namespace WsRaisedHandsModern.Api.Interfaces
         Task<List<FoundationsCsvImportModel>> GetCsvPreviewAsync(Stream csvStream);
     }
 
-    public class CsvValidationResult
-    {
-        public bool IsValid { get; set; }
-        public List<string> HeaderErrors { get; set; } = new();
-        public List<CertificateProcessingError> DataErrors { get; set; } = new();
-        public int TotalRows { get; set; }
-        public int ValidRows { get; set; }
-        public int InvalidRows => TotalRows - ValidRows;
-    }
+   
 }

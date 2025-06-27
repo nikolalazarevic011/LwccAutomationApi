@@ -73,30 +73,6 @@ namespace WsRaisedHandsModern.Api.Services
             }
         }
 
-        public CsvValidationResult ValidateCsvData(IEnumerable<FoundationsCsvImportModel> csvData)
-        {
-            var result = new CsvValidationResult
-            {
-                TotalRows = csvData.Count()
-            };
-
-            var errors = new List<CertificateProcessingError>();
-            int rowNumber = 1; // Start at 1 (excluding header)
-
-            foreach (var row in csvData)
-            {
-                rowNumber++;
-                var rowErrors = ValidateRow(row, rowNumber);
-                errors.AddRange(rowErrors);
-            }
-
-            result.DataErrors = errors;
-            result.ValidRows = result.TotalRows - errors.Count;
-            result.IsValid = errors.Count == 0;
-
-            return result;
-        }
-
         public (List<FoundationsCertificateDTO> ValidCertificates, List<CertificateProcessingError> Errors)
             ConvertAndValidateCsvData(IEnumerable<FoundationsCsvImportModel> csvData)
         {

@@ -15,7 +15,7 @@ namespace WsRaisedHandsModern.Api.Interfaces
         Task<byte[]> GenerateCertificateAsync(FoundationsCertificateDTO certificateData);
 
         /// <summary>
-        /// Generates a certificate and saves it to a file path
+        /// Generates a certificate and saves it to a file path, WITHOUT EMAILING, 
         /// </summary>
         /// <param name="certificateData">Certificate data including name and completion date</param>
         /// <param name="outputPath">Full path where the PDF should be saved</param>
