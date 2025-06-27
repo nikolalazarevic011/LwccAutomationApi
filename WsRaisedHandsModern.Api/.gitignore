@@ -451,3 +451,6 @@ $RECYCLE.BIN/
 .idea/
 *.sln.iml
 
+# Keep Generated folder but ignore all contents
+**/Generated/*
+!**/Generated/.gitkeep

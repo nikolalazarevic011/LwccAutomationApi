@@ -43,6 +43,8 @@ namespace WsRaisedHandsModern.Api.Services
 
                 var pdfBytes = await Task.Run(() => CreateCertificatePdf(certificateData));
 
+                await SaveCertificateToArchiveAsync(certificateData, pdfBytes);
+
                 _logger.LogInformation("Successfully generated certificate PDF for {FullName}", certificateData.FullName);
                 return pdfBytes;
             }
@@ -206,6 +208,25 @@ namespace WsRaisedHandsModern.Api.Services
                 catch (Exception ex)
                 {
                     issues.Add($"Cannot create temporary storage directory: {ex.Message}");
+                }
+            }
+
+            // Add validation for archive path
+            if (!string.IsNullOrEmpty(_certificateSettings.GeneratedCertificatesPath))
+            {
+                try
+                {
+                    var archivePath = Path.IsPathRooted(_certificateSettings.GeneratedCertificatesPath)
+                        ? _certificateSettings.GeneratedCertificatesPath
+                        : Path.Combine(Directory.GetCurrentDirectory(), _certificateSettings.GeneratedCertificatesPath);
+
+                    Directory.CreateDirectory(archivePath);
+                    _logger.LogInformation("Archive directory configured at: {ArchivePath}", archivePath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Cannot create archive directory, automatic saving will be disabled");
+                    // Don't add to issues - this is optional functionality
                 }
             }
 
@@ -454,6 +475,47 @@ namespace WsRaisedHandsModern.Api.Services
             });
 
             await Task.WhenAll(tasks);
+        }
+
+        private async Task SaveCertificateToArchiveAsync(FoundationsCertificateDTO certificateData, byte[] pdfBytes)
+        {
+            try
+            {
+                // Skip if archive path not configured
+                if (string.IsNullOrEmpty(_certificateSettings.GeneratedCertificatesPath))
+                {
+                    _logger.LogDebug("GeneratedCertificatesPath not configured, skipping automatic save");
+                    return;
+                }
+
+                // Create organized folder structure: /GeneratedCertificates/2024/June/
+                var archiveBasePath = Path.IsPathRooted(_certificateSettings.GeneratedCertificatesPath)
+                    ? _certificateSettings.GeneratedCertificatesPath
+                    : Path.Combine(Directory.GetCurrentDirectory(), _certificateSettings.GeneratedCertificatesPath);
+
+                var yearFolder = DateTime.Now.Year.ToString();
+                var monthFolder = DateTime.Now.ToString("MMMM");
+                var fullArchivePath = Path.Combine(archiveBasePath, yearFolder, monthFolder);
+
+                // Ensure directory exists
+                Directory.CreateDirectory(fullArchivePath);
+
+                // Create unique filename with timestamp to avoid conflicts
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var fileName = $"Certificate_{certificateData.FirstName}_{certificateData.LastName}_{timestamp}.pdf";
+                var filePath = Path.Combine(fullArchivePath, fileName);
+
+                // Save the certificate
+                await File.WriteAllBytesAsync(filePath, pdfBytes);
+
+                _logger.LogInformation("Certificate automatically archived to {FilePath}", filePath);
+            }
+            catch (Exception ex)
+            {
+                // Don't throw - archiving failure shouldn't break the main process
+                _logger.LogWarning(ex, "Failed to automatically archive certificate for {FullName}, but certificate generation succeeded",
+                    certificateData.FullName);
+            }
         }
     }
 }
