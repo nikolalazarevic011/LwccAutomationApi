@@ -38,7 +38,7 @@ namespace WsRaisedHandsModern.Api.Controllers
         {
             return View(); // Returns Views/Home/Dashboard.cshtml
         }*/
-        
+
         [Route("dashboard")]
         public IActionResult Dashboard()
         {
@@ -100,6 +100,19 @@ namespace WsRaisedHandsModern.Api.Controllers
                     },
                     new DashboardSection
                     {
+                        Id = "certificate-management",
+                        Title = "Certificate Management",
+                        Icon = "bi-award",
+                        Color = "success",
+                        Endpoints = new List<ApiEndpoint>
+                        {
+                            new ApiEndpoint { Id = "generate-single-certificate", Title = "Generate Single Certificate", Description = "Create and email a single certificate", Url = "/api/foundationscertificate/generate-and-email", Icon = "bi-award", ButtonColor = "success", Method = "POST" },
+                            new ApiEndpoint { Id = "upload-csv-certificates", Title = "Bulk Certificate Processing", Description = "Upload CSV and process multiple certificates", Url = "/api/foundationscertificate/upload", Icon = "bi-file-earmark-spreadsheet", ButtonColor = "info", Method = "POST" },
+
+                        }
+                    },
+                    new DashboardSection
+                    {
                         Id = "external-integrations",
                         Title = "External Integrations",
                         Icon = "bi-diagram-3",
@@ -113,7 +126,7 @@ namespace WsRaisedHandsModern.Api.Controllers
                     }
                 }
             };
-    
+
             return View(model);
         }
 
