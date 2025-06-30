@@ -1,0 +1,53 @@
+@* Single Certificate Generation Modal *@
+<div class="modal fade" id="singleCertificateModal" tabindex="-1" aria-labelledby="singleCertificateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="singleCertificateModalLabel">
+                    <i class="bi bi-award text-success"></i> Generate Single Certificate
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="singleCertificateForm">
+                    <div class="mb-3">
+                        <label for="certificateEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="certificateEmail" required 
+                               placeholder="recipient@example.com">
+                        <div class="invalid-feedback">Please provide a valid email address.</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="certificateFirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="certificateFirstName" required 
+                                       placeholder="John" maxlength="50">
+                                <div class="invalid-feedback">First name is required.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="certificateLastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="certificateLastName" required 
+                                       placeholder="Doe" maxlength="50">
+                                <div class="invalid-feedback">Last name is required.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="certificateCompletionDate" class="form-label">Completion Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="certificateCompletionDate" required>
+                        <div class="invalid-feedback">Completion date is required.</div>
+                        <div class="form-text">Date cannot be in the future.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitSingleCertificate()">
+                    <i class="bi bi-send"></i> Generate & Email Certificate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
