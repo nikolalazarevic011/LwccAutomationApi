@@ -1,0 +1,427 @@
+@model WsRaisedHandsModern.Api.Data.AppData.Entities.AppUser
+
+@{
+    ViewData["Title"] = "User Details";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Use your main layout instead of null
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-person-circle"></i> User Details</h1>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Edit User
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            @if (Model == null)
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> User not found.
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    <!-- Personal Information Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="bi bi-person"></i> Personal Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row">
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FirstName)</dt>
+                                    <dd class="col-sm-8">@(Model.FirstName ?? "Not specified")</dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LastName)</dt>
+                                    <dd class="col-sm-8">@(Model.LastName ?? "Not specified")</dd>
+                                    
+                                    <dt class="col-sm-4">Full Name</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(Model.FirstName) || !string.IsNullOrEmpty(Model.LastName))
+                                        {
+                                            <span>@(Model.FirstName ?? "") @(Model.LastName ?? "")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not specified</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="bi bi-envelope"></i> Account Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row">
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.UserName)</dt>
+                                    <dd class="col-sm-8">@(Model.UserName ?? "Not set")</dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Email)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(Model.Email))
+                                        {
+                                            <a href="mailto:@Model.Email">@Model.Email</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PhoneNumber)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                        {
+                                            <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Status Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="bi bi-shield-check"></i> Security Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row">
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.EmailConfirmed)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.EmailConfirmed)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Confirmed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning"><i class="bi bi-exclamation-circle"></i> Pending</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PhoneNumberConfirmed)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.PhoneNumberConfirmed)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Confirmed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning"><i class="bi bi-exclamation-circle"></i> Pending</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TwoFactorEnabled)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.TwoFactorEnabled)
+                                        {
+                                            <span class="badge bg-info"><i class="bi bi-shield-check"></i> Enabled</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary"><i class="bi bi-shield"></i> Disabled</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Security Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="bi bi-lock"></i> Account Security</h5>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row">
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LockoutEnabled)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.LockoutEnabled)
+                                        {
+                                            <span class="badge bg-danger"><i class="bi bi-lock"></i> Enabled</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-unlock"></i> Disabled</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LockoutEnd)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.LockoutEnd.HasValue)
+                                        {
+                                            if (Model.LockoutEnd > DateTimeOffset.UtcNow)
+                                            {
+                                                <span class="badge bg-danger">Locked until @Model.LockoutEnd.Value.ToString("yyyy-MM-dd HH:mm") UTC</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Previously locked (expired)</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Never locked</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.AccessFailedCount)</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.AccessFailedCount > 0)
+                                        {
+                                            <span class="badge bg-warning">@Model.AccessFailedCount failed attempts</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">0 failed attempts</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Information Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Activity Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row">
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Created)</dt>
+                                    <dd class="col-sm-8">
+                                        <span title="@Model.Created.ToString("yyyy-MM-dd HH:mm:ss") UTC">
+                                            @Model.Created.ToString("yyyy-MM-dd HH:mm")
+                                        </span>
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LastActive)</dt>
+                                    <dd class="col-sm-8">
+                                        <span title="@Model.LastActive.ToString("yyyy-MM-dd HH:mm:ss") UTC">
+                                            @Model.LastActive.ToString("yyyy-MM-dd HH:mm")
+                                        </span>
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Account Age</dt>
+                                    <dd class="col-sm-8">
+                                        @{
+                                            var accountAge = DateTime.UtcNow - Model.Created;
+                                            if (accountAge.TotalDays >= 1)
+                                            {
+                                                <span>@((int)accountAge.TotalDays) days</span>
+                                            }
+                                            else if (accountAge.TotalHours >= 1)
+                                            {
+                                                <span>@((int)accountAge.TotalHours) hours</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@((int)accountAge.TotalMinutes) minutes</span>
+                                            }
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Information Card (Admin Only) -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0"><i class="bi bi-gear"></i> Technical Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row">
+                                    <dt class="col-sm-4">User ID</dt>
+                                    <dd class="col-sm-8"><code>@Model.Id</code></dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.NormalizedUserName)</dt>
+                                    <dd class="col-sm-8"><code>@(Model.NormalizedUserName ?? "Not set")</code></dd>
+                                    
+                                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.NormalizedEmail)</dt>
+                                    <dd class="col-sm-8"><code>@(Model.NormalizedEmail ?? "Not set")</code></dd>
+                                    
+                                    <dt class="col-sm-4">Password Set</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(Model.PasswordHash))
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Yes</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> No</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Security Stamp</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(Model.SecurityStamp))
+                                        {
+                                            <code class="text-truncate d-inline-block" style="max-width: 200px;" title="@Model.SecurityStamp">
+                                                @Model.SecurityStamp
+                                            </code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Concurrency Stamp</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(Model.ConcurrencyStamp))
+                                        {
+                                            <code class="text-truncate d-inline-block" style="max-width: 200px;" title="@Model.ConcurrencyStamp">
+                                                @Model.ConcurrencyStamp
+                                            </code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-tools"></i> Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="btn-group me-2" role="group">
+                                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                                        <i class="bi bi-pencil"></i> Edit User
+                                    </a>
+                                    <a asp-action="Index" class="btn btn-secondary">
+                                        <i class="bi bi-arrow-left"></i> Back to List
+                                    </a>
+                                </div>
+                                
+                                <div class="btn-group me-2" role="group">
+                                    @if (!Model.EmailConfirmed)
+                                    {
+                                        <button type="button" class="btn btn-outline-success" onclick="confirmEmail('@Model.Id')">
+                                            <i class="bi bi-envelope-check"></i> Confirm Email
+                                        </button>
+                                    }
+                                    
+                                    @if (Model.LockoutEnabled && Model.LockoutEnd > DateTimeOffset.UtcNow)
+                                    {
+                                        <button type="button" class="btn btn-outline-warning" onclick="unlockAccount('@Model.Id')">
+                                            <i class="bi bi-unlock"></i> Unlock Account
+                                        </button>
+                                    }
+                                    
+                                    @if (Model.AccessFailedCount > 0)
+                                    {
+                                        <button type="button" class="btn btn-outline-info" onclick="resetFailedAttempts('@Model.Id')">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset Failed Attempts
+                                        </button>
+                                    }
+                                </div>
+                                
+                                <!--<div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-danger" onclick="deleteUser('@Model.Id', '@Model.Email')">
+                                        <i class="bi bi-trash"></i> Delete User
+                                    </button>
+                                </div>-->
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Delete" asp-route-id="@Model.Id"  class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Delete User
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmEmail(userId) {
+            if (confirm('Are you sure you want to confirm this user\'s email?')) {
+                // Add AJAX call to confirm email
+                console.log('Confirm email for user:', userId);
+            }
+        }
+        
+        function unlockAccount(userId) {
+            if (confirm('Are you sure you want to unlock this account?')) {
+                // Add AJAX call to unlock account
+                console.log('Unlock account for user:', userId);
+            }
+        }
+        
+        function resetFailedAttempts(userId) {
+            if (confirm('Are you sure you want to reset failed login attempts?')) {
+                // Add AJAX call to reset failed attempts
+                console.log('Reset failed attempts for user:', userId);
+            }
+        }
+        
+        function deleteUser(userId, email) {
+            if (confirm(`Are you sure you want to delete user ${email}? This action cannot be undone.`)) {
+                if (confirm('This will PERMANENTLY delete the user. Are you absolutely sure?')) {
+                    // Option 1: Redirect to confirmation page (current implementation)
+                    window.location.href = '@Url.Action("Delete", "Admin")' + '/' + userId;
+                    
+                    // Option 2: AJAX deletion (uncomment to use)
+                    /*
+                    fetch('/Admin/DeleteUserAjax', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({ id: userId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('User deleted successfully');
+                            window.location.href = '/Admin';
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the user');
+                    });
+                    */
+                }
+            }
+        }
+    </script>
+}

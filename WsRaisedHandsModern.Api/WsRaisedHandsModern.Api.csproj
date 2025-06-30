@@ -4,23 +4,55 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultContentItems>true</EnableDefaultContentItems>
     <AssemblyName>WsRaisedHandsModern.Api</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Existing packages -->
-    <PackageReference Include="FreeSpire.XLS" Version="14.2.0" />
+    <!-- Core Web and API packages -->
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.4.13" />
+    
+    <!-- Database and Entity Framework -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.6" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.4.13" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    
+    <!-- Identity and Authentication -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.6" />
+    
+    <!-- Logging -->
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-
-    <!-- New packages for certificate generation -->
-    <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.3.5" />
+    
+    <!-- Excel and File Processing -->
+    <PackageReference Include="FreeSpire.XLS" Version="14.2.0" />
     <PackageReference Include="CsvHelper" Version="32.0.3" />
+    
+    <!-- PDF Certificate Generation -->
+    <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.3.5" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
+    
+    <!-- Code Generation and Development Tools -->
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+  </ItemGroup>
+
+  <!-- Exclude sensitive files from publish -->
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+    <Content Update="appsettings.Development.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+    <Content Update="web.config">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

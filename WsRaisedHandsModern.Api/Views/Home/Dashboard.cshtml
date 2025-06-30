@@ -1,0 +1,431 @@
+@model WsRaisedHandsModern.Api.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "IT Automation Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6"><i class="bi bi-speedometer2 text-primary"></i> IT Automation Dashboard</h1>
+                    <p class="text-muted">Central control panel for IT operations and automation</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="refreshDashboard()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="toggleFullscreen()">
+                        <i class="bi bi-fullscreen"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Row -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="text-white mb-0">
+                        <i class="bi bi-activity"></i> System Status
+                        <span class="badge bg-light text-dark ms-2">@Model.SystemStatus.Status</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-check-circle text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">System Status</h6>
+                                    <small class="text-success">@Model.SystemStatus.Status</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-people text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Active Connections</h6>
+                                    <small class="text-muted">@Model.SystemStatus.ActiveConnections</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-clock text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Last Updated</h6>
+                                    <small class="text-muted">@Model.SystemStatus.LastUpdated.ToString("HH:mm:ss")</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-server text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Services</h6>
+                                    <small class="text-muted">@Model.SystemStatus.Services.Count(s => s.Status == "Online")/@Model.SystemStatus.Services.Count Online</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Status Details -->
+                    <hr>
+                    <div class="row">
+                        @foreach (var service in Model.SystemStatus.Services)
+                        {
+                            <div class="col-md-3 mb-2">
+                                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-@(service.Status == "Online" ? "success" : service.Status == "Warning" ? "warning" : "danger") me-2">
+                                            @service.Status
+                                        </span>
+                                        <small>@service.Name</small>
+                                    </div>
+                                    <small class="text-muted">@service.ResponseTime.TotalMilliseconds ms</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Sections -->
+    @foreach (var sec in Model.Sections)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-@sec.Color text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="@sec.Icon"></i> @sec.Title
+                            </h5>
+                            <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#@sec.Id" aria-expanded="true">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse show" id="@sec.Id">
+                        <div class="card-body">
+                            <div class="row">
+                                @foreach (var endpoint in sec.Endpoints)
+                                {
+                                    <div class="col-xl-4 col-lg-6 col-md-6 mb-3">
+                                        <div class="card h-100 border-0 shadow-sm endpoint-card" data-endpoint-id="@endpoint.Id">
+                                            <div class="card-body d-flex flex-column">
+                                                <div class="d-flex align-items-start mb-3">
+                                                    <div class="me-3">
+                                                        <div class="bg-@endpoint.ButtonColor bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                            <i class="@endpoint.Icon text-@endpoint.ButtonColor fs-5"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="card-title mb-1">@endpoint.Title</h6>
+                                                        <p class="card-text text-muted small mb-0">@endpoint.Description</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mt-auto">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <small class="text-muted">
+                                                            <span class="badge bg-secondary">@endpoint.Method</span>
+                                                            @if (endpoint.IsExternal)
+                                                            {
+                                                                <span class="badge bg-info ms-1">External</span>
+                                                            }
+                                                            @if (endpoint.RequiresAuth)
+                                                            {
+                                                                <span class="badge bg-warning ms-1">Auth Required</span>
+                                                            }
+                                                        </small>
+                                                    </div>
+                                                    
+                                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                                        @if (endpoint.Method == "GET")
+                                                        {
+                                                            <a href="@endpoint.Url" class="btn btn-@endpoint.ButtonColor btn-sm flex-fill" 
+                                                               @(endpoint.IsExternal ? "target=\"_blank\"" : "")>
+                                                                <i class="@endpoint.Icon me-1"></i> Execute
+                                                                @if (endpoint.IsExternal)
+                                                                {
+                                                                    <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                                                }
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn btn-@endpoint.ButtonColor btn-sm flex-fill" 
+                                                                    onclick="executeApiCall('@endpoint.Id', '@endpoint.Url', '@endpoint.Method', @endpoint.IsExternal.ToString().ToLower())">
+                                                                <i class="@endpoint.Icon me-1"></i> Execute
+                                                            </button>
+                                                        }
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                                onclick="showEndpointDetails('@endpoint.Id')"
+                                                                data-bs-toggle="tooltip" title="View Details">
+                                                            <i class="bi bi-info-circle"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Quick Actions Floating Panel -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        <div class="card shadow border-0" style="width: 300px;" id="quickActionsPanel">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h6>
+                <button class="btn btn-sm btn-outline-light" onclick="toggleQuickActions()">
+                    <i class="bi bi-dash"></i>
+                </button>
+            </div>
+            <div class="card-body" id="quickActionsBody">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success btn-sm" onclick="executeQuickAction('health-check')">
+                        <i class="bi bi-heart-pulse"></i> Health Check
+                    </button>
+                    <button class="btn btn-info btn-sm" onclick="executeQuickAction('refresh-cache')">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Cache
+                    </button>
+                    <button class="btn btn-warning btn-sm" onclick="executeQuickAction('clear-logs')">
+                        <i class="bi bi-trash"></i> Clear Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Response Modal -->
+<div class="modal fade" id="apiResponseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">API Response</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="apiResponseContent">
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-2">Executing API call...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+
+        let quickActionsPanelCollapsed = false;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Auto-refresh system status every 30 seconds
+            setInterval(refreshSystemStatus, 30000);
+        });
+
+        function refreshDashboard() {
+            const refreshBtn = document.querySelector('[onclick="refreshDashboard()"] i');
+            refreshBtn.classList.add('fa-spin');
+            
+            setTimeout(() => {
+                refreshBtn.classList.remove('fa-spin');
+                location.reload();
+            }, 1000);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function executeApiCall(endpointId, url, method, isExternal) {
+            const modal = new bootstrap.Modal(document.getElementById('apiResponseModal'));
+            modal.show();
+
+            if (isExternal) {
+                document.getElementById('apiResponseContent').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>External API Call</strong><br>
+                        Opening: <code>${url}</code><br>
+                        Method: <code>${method}</code>
+                    </div>`;
+                window.open(url, '_blank');
+                return;
+            }
+
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            };
+
+            fetch(url, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('apiResponseContent').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> <strong>Success</strong>
+                        </div>
+                        <h6>Response:</h6>
+                        <pre class="bg-light p-3 rounded"><code>${JSON.stringify(data, null, 2)}</code></pre>`;
+                })
+                .catch(error => {
+                    document.getElementById('apiResponseContent').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> <strong>Error</strong><br>
+                            ${error.message}
+                        </div>`;
+                });
+        }
+
+        function showEndpointDetails(endpointId) {
+            // This would show detailed information about the endpoint
+            alert(`Details for endpoint: ${endpointId}`);
+        }
+
+        function toggleQuickActions() {
+            const panel = document.getElementById('quickActionsPanel');
+            const body = document.getElementById('quickActionsBody');
+            
+            if (quickActionsPanelCollapsed) {
+                body.style.display = 'block';
+                quickActionsPanelCollapsed = false;
+            } else {
+                body.style.display = 'none';
+                quickActionsPanelCollapsed = true;
+            }
+        }
+
+        function executeQuickAction(action) {
+            console.log(`Executing quick action: ${action}`);
+            // Implement quick action logic here
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 start-0 m-3';
+            toast.setAttribute('role', 'alert');
+            toast.style.zIndex = '1060';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-check-circle me-2"></i>Quick action '${action}' executed successfully!
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>`;
+            
+            document.body.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', () => {
+                document.body.removeChild(toast);
+            });
+        }
+
+        function refreshSystemStatus() {
+            // This would fetch updated system status from the server
+            console.log('Refreshing system status...');
+        }
+
+        // Add hover effects to endpoint cards
+        document.querySelectorAll('.endpoint-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.transition = 'transform 0.2s ease-in-out';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+    </script>
+
+    <style>
+        .bg-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+        
+        .endpoint-card {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .endpoint-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        }
+        
+        .card {
+            border-radius: 10px;
+        }
+        
+        .btn {
+            border-radius: 6px;
+        }
+        
+        @@media (max-width: 768px) {
+            #quickActionsPanel {
+                width: 250px !important;
+            }
+        }
+    </style>
+}

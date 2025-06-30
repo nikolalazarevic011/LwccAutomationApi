@@ -1,0 +1,267 @@
+@model WsRaisedHandsModern.Api.ViewModels.EditUserViewModel
+
+@{
+    ViewData["Title"] = "Edit User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-pencil-square"></i> Edit User</h1>
+                <div>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                        <i class="bi bi-eye"></i> View Details
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form asp-action="Edit" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <!-- Personal Information Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="bi bi-person"></i> Personal Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label asp-for="FirstName" class="form-label"></label>
+                                    <input asp-for="FirstName" class="form-control" />
+                                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="LastName" class="form-label"></label>
+                                    <input asp-for="LastName" class="form-control" />
+                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label"></label>
+                                    <input asp-for="PhoneNumber" class="form-control" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="bi bi-envelope"></i> Account Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label"></label>
+                                    <input asp-for="Email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                    <div class="form-text">Changing email will require re-confirmation.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="UserName" class="form-label"></label>
+                                    <input asp-for="UserName" class="form-control" />
+                                    <span asp-validation-for="UserName" class="text-danger"></span>
+                                    <div class="form-text">Username must be unique.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="bi bi-shield-check"></i> Security Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input asp-for="EmailConfirmed" class="form-check-input" />
+                                    <label asp-for="EmailConfirmed" class="form-check-label"></label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input asp-for="PhoneNumberConfirmed" class="form-check-input" />
+                                    <label asp-for="PhoneNumberConfirmed" class="form-check-label"></label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input asp-for="TwoFactorEnabled" class="form-check-input" />
+                                    <label asp-for="TwoFactorEnabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Security Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="bi bi-lock"></i> Account Security</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input asp-for="LockoutEnabled" class="form-check-input" />
+                                    <label asp-for="LockoutEnabled" class="form-check-label"></label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="LockoutEnd" class="form-label"></label>
+                                    <input asp-for="LockoutEnd" class="form-control" type="datetime-local" />
+                                    <span asp-validation-for="LockoutEnd" class="text-danger"></span>
+                                    <div class="form-text">Leave empty to remove lockout.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="AccessFailedCount" class="form-label"></label>
+                                    <input asp-for="AccessFailedCount" class="form-control" type="number" min="0" />
+                                    <span asp-validation-for="AccessFailedCount" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Reset Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="bi bi-key"></i> Password Reset</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <strong>Optional:</strong> Leave blank to keep current password.
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="NewPassword" class="form-label"></label>
+                                    <input asp-for="NewPassword" class="form-control" autocomplete="new-password" />
+                                    <span asp-validation-for="NewPassword" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role Management Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="bi bi-people"></i> Role Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Current Roles</label>
+                                    <div class="mb-2">
+                                        @if (Model.UserRoles.Any())
+                                        {
+                                            @foreach (var role in Model.UserRoles)
+                                            {
+                                                <span class="badge bg-primary me-1">@role</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No roles assigned</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Assign Roles</label>
+                                    @for (int i = 0; i < Model.AvailableRoles.Count; i++)
+                                    {
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                   name="SelectedRoles" 
+                                                   value="@Model.AvailableRoles[i]" 
+                                                   class="form-check-input" 
+                                                   id="role_@i"
+                                                   @(Model.UserRoles.Contains(Model.AvailableRoles[i]) ? "checked" : "") />
+                                            <label class="form-check-label" for="role_@i">
+                                                @Model.AvailableRoles[i]
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle"></i> Save Changes
+                                        </button>
+                                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                                            <i class="bi bi-eye"></i> View Details
+                                        </a>
+                                        <a asp-action="Index" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-left"></i> Back to List
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-warning" onclick="resetForm()">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset Form
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All unsaved changes will be lost.')) {
+                document.querySelector('form').reset();
+            }
+        }
+
+        // Auto-format datetime input for lockout end
+        document.addEventListener('DOMContentLoaded', function() {
+            const lockoutEndInput = document.getElementById('LockoutEnd');
+            if (lockoutEndInput && lockoutEndInput.value) {
+                // Convert UTC to local time for display
+                const utcDate = new Date(lockoutEndInput.value);
+                const localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+                lockoutEndInput.value = localDate.toISOString().slice(0, 16);
+            }
+        });
+    </script>
+}
