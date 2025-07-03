@@ -103,6 +103,9 @@ builder.Services.AddRazorPages().AddRazorPagesOptions(options =>
 // Add CMS Reporting Repository
 builder.Services.AddScoped<IRaisedHandsCmsReportRepository, RaisedHandsCmsReportRepository>();
 
+// Add AppData repositories
+builder.Services.AddScoped<IEmailHistoryRepository, EmailHistoryRepository>();
+
 // Add Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 

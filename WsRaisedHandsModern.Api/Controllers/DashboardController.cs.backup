@@ -1,0 +1,155 @@
+using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using WsRaisedHandsModern.Api.ViewModels;
+
+namespace WsRaisedHandsModern.Api.Controllers
+{
+    [Authorize(Policy = "RequireDashboardAccess")]
+    public class DashboardController : Controller
+    {
+        private readonly ILogger<HomeController> _logger;
+
+        public DashboardController(ILogger<HomeController> logger)
+        {
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Generate URL with dynamic date parameters
+        /// </summary>
+        private string GenerateReportUrl(string baseUrl, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var start = startDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd");
+            var end = endDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
+            
+            return $"{baseUrl}?startDate={start}&endDate={end}";
+        }
+
+        [Route("dashboard")]
+        public IActionResult Index()
+        {
+            var model = new DashboardViewModel
+            {
+                SystemStatus = new SystemStatus
+                {
+                    Status = "Online",
+                    ActiveConnections = 42,
+                    LastUpdated = DateTime.Now,
+                    Services = new List<ServiceStatus>
+                    {
+                        new ServiceStatus { Name = "Database", Status = "Online", ResponseTime = TimeSpan.FromMilliseconds(45) },
+                        new ServiceStatus { Name = "API Gateway", Status = "Online", ResponseTime = TimeSpan.FromMilliseconds(120) },
+                        new ServiceStatus { Name = "Cache Server", Status = "Warning", ResponseTime = TimeSpan.FromMilliseconds(300) },
+                        new ServiceStatus { Name = "File Storage", Status = "Online", ResponseTime = TimeSpan.FromMilliseconds(80) }
+                    }
+                },
+                Sections = new List<DashboardSection>
+                {
+                    new DashboardSection
+                    {
+                        Id = "raisedHands-reports",
+                        Title = "Raised Hands Report Tools",
+                        Icon = "bi-robot",
+                        Color = "warning",
+                        Endpoints = new List<ApiEndpoint>
+                        {
+                            new ApiEndpoint { Id = "send-raisedhands-report-today", Title = "Today's Report", Description = "Send report for today", Url = GenerateReportUrl("/RaisedHandsSalvation/CreateExcel"), Icon = "bi-journal-text", ButtonColor = "primary", Method = "POST" },
+                            new ApiEndpoint { Id = "send-raisedhands-report-week", Title = "This Week's Report", Description = "Send report for current week", Url = GenerateReportUrl("/RaisedHandsSalvation/CreateExcel", DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek), DateTime.Today.AddDays(7 - (int)DateTime.Today.DayOfWeek)), Icon = "bi-calendar-week", ButtonColor = "info", Method = "POST" },
+                            new ApiEndpoint { Id = "send-raisedhands-report-month", Title = "This Month's Report", Description = "Send report for current month", Url = GenerateReportUrl("/RaisedHandsSalvation/CreateExcel", new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(1).AddDays(-1)), Icon = "bi-calendar-month", ButtonColor = "success", Method = "POST" },
+                            new ApiEndpoint { Id = "send-raisedhands-report-custom", Title = "Custom Date Range", Description = "Select custom date range", Url = "#", Icon = "bi-calendar-range", ButtonColor = "warning", Method = "CUSTOM" },
+                            new ApiEndpoint { Id = "deploy-updates", Title = "Does Nothing", Description = "Deploy system updates", Url = "/api/automation/deploy", Icon = "bi-arrow-repeat", ButtonColor = "warning", Method = "POST" },
+                            new ApiEndpoint { Id = "restart-services", Title = "Does Nothing", Description = "Restart system services", Url = "/api/automation/restart", Icon = "bi-bootstrap-reboot", ButtonColor = "danger", Method = "POST" }
+                        }
+                    },
+                    new DashboardSection
+                    {
+                        Id = "automation-tools",
+                        Title = "IT Automation Tools",
+                        Icon = "bi-robot",
+                        Color = "warning",
+                        Endpoints = new List<ApiEndpoint>
+                        {
+                            new ApiEndpoint { Id = "backup-systems", Title = "Backup Systems", Description = "Trigger system backups", Url = "/api/automation/backup", Icon = "bi-cloud-arrow-up", ButtonColor = "primary", Method = "POST" },
+                            new ApiEndpoint { Id = "deploy-updates", Title = "Deploy Updates", Description = "Deploy system updates", Url = "/api/automation/deploy", Icon = "bi-arrow-repeat", ButtonColor = "warning", Method = "POST" },
+                            new ApiEndpoint { Id = "restart-services", Title = "Restart Services", Description = "Restart system services", Url = "/api/automation/restart", Icon = "bi-bootstrap-reboot", ButtonColor = "danger", Method = "POST" }
+                        }
+                    },
+                    new DashboardSection
+                    {
+                        Id = "user-management",
+                        Title = "User Management",
+                        Icon = "bi-people",
+                        Color = "primary",
+                        Endpoints = new List<ApiEndpoint>
+                        {
+                            new ApiEndpoint { Id = "list-users", Title = "List Users", Description = "View all users", Url = "/Admin/Index", Icon = "bi-person-lines-fill", ButtonColor = "info" },
+                            new ApiEndpoint { Id = "create-user", Title = "Create User", Description = "Add new user", Url = "/Admin/Create", Icon = "bi-person-plus", ButtonColor = "success" },
+                            new ApiEndpoint { Id = "user-roles", Title = "Manage Roles", Description = "User role management", Url = "/Admin/Roles", Icon = "bi-shield-check", ButtonColor = "warning" }
+                        }
+                    },
+                    new DashboardSection
+                    {
+                        Id = "system-monitoring",
+                        Title = "System Monitoring",
+                        Icon = "bi-graph-up",
+                        Color = "success",
+                        Endpoints = new List<ApiEndpoint>
+                        {
+                            new ApiEndpoint { Id = "system-health", Title = "System Health", Description = "Check system status", Url = "/api/health", Icon = "bi-heart-pulse", ButtonColor = "success", Method = "GET" },
+                            new ApiEndpoint { Id = "performance", Title = "Performance Metrics", Description = "View performance data", Url = "/api/metrics", Icon = "bi-speedometer2", ButtonColor = "info", Method = "GET" },
+                            new ApiEndpoint { Id = "logs", Title = "System Logs", Description = "View application logs", Url = "/api/logs", Icon = "bi-journal-text", ButtonColor = "secondary", Method = "GET" }
+                        }
+                    },
+                    new DashboardSection
+                    {
+                        Id = "external-integrations",
+                        Title = "External Integrations",
+                        Icon = "bi-diagram-3",
+                        Color = "info",
+                        Endpoints = new List<ApiEndpoint>
+                        {
+                            new ApiEndpoint { Id = "azure-status", Title = "Azure Services", Description = "Check Azure service status", Url = "https://status.azure.com/api/status", Icon = "bi-cloud", ButtonColor = "info", IsExternal = true, Method = "GET" },
+                            new ApiEndpoint { Id = "github-repos", Title = "GitHub Repositories", Description = "Manage repositories", Url = "https://api.github.com/user/repos", Icon = "bi-github", ButtonColor = "dark", IsExternal = true, RequiresAuth = true, Method = "GET" },
+                            new ApiEndpoint { Id = "slack-notifications", Title = "Slack Notifications", Description = "Send notifications", Url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK", Icon = "bi-slack", ButtonColor = "success", IsExternal = true, Method = "POST" }
+                        }
+                    }
+                }
+            };
+    
+            return View(model);
+        }
+
+        /// <summary>
+        /// Generate report URL for custom date range (AJAX endpoint)
+        /// </summary>
+        [HttpPost]
+        [Route("dashboard/generate-report-url")]
+        [ValidateAntiForgeryToken]
+        public IActionResult GenerateReportUrlEndpoint(string startDate, string endDate)
+        {
+            try
+            {
+                _logger.LogInformation("Received date range request: startDate={StartDate}, endDate={EndDate}", startDate, endDate);
+                
+                if (DateTime.TryParse(startDate, out var start) && DateTime.TryParse(endDate, out var end))
+                {
+                    var url = GenerateReportUrl("/RaisedHandsSalvation/CreateExcel", start, end);
+                    _logger.LogInformation("Generated report URL: {Url}", url);
+                    return Json(new { success = true, url = url });
+                }
+                
+                _logger.LogWarning("Invalid date format received: startDate={StartDate}, endDate={EndDate}", startDate, endDate);
+                return Json(new { success = false, message = $"Invalid date format. Received: startDate='{startDate}', endDate='{endDate}'" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating report URL");
+                return Json(new { success = false, message = "Error generating report URL" });
+            }
+        }
+
+    }
+}
